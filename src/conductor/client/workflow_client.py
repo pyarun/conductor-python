@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from conductor.client.http.models import WorkflowRun, SkipTaskRequest, WorkflowStatus, \
     ScrollableSearchResultWorkflowSummary
@@ -81,7 +81,7 @@ class WorkflowClient(ABC):
             self,
             batch_request: CorrelationIdsSearchRequest,
             include_completed: bool = False,
-            include_tasks: bool = False) -> dict[str, List[Workflow]]:
+            include_tasks: bool = False) -> Dict[str, List[Workflow]]:
         pass
 
     @abstractmethod
@@ -91,7 +91,7 @@ class WorkflowClient(ABC):
             correlation_ids: List[str],
             include_completed: bool = False,
             include_tasks: bool = False
-    ) -> dict[str, List[Workflow]]:
+    ) -> Dict[str, List[Workflow]]:
         pass
 
     @abstractmethod
@@ -99,5 +99,5 @@ class WorkflowClient(ABC):
         pass
 
     @abstractmethod
-    def update_variables(self, workflow_id: str, variables: dict[str, object] = {}) -> None:
+    def update_variables(self, workflow_id: str, variables: Dict[str, object] = {}) -> None:
         pass
