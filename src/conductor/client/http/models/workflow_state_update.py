@@ -1,6 +1,6 @@
 import pprint
 import re  # noqa: F401
-
+from typings import Dict
 import six
 
 from conductor.client.http.models import TaskResult
@@ -31,7 +31,7 @@ class WorkflowStateUpdate(object):
     }
 
     def __init__(self, task_reference_name: str = None, task_result: TaskResult = None,
-                 variables: dict[str, object] = None):  # noqa: E501
+                 variables: Dict[str, object] = None):  # noqa: E501
         """WorkflowStateUpdate - a model defined in Swagger"""  # noqa: E501
         self._task_reference_name = None
         self._task_result = None
@@ -86,7 +86,7 @@ class WorkflowStateUpdate(object):
         self._task_result = task_result
 
     @property
-    def variables(self) -> dict[str, object]:
+    def variables(self) -> Dict[str, object]:
         """Gets the variables of this WorkflowStateUpdate.  # noqa: E501
 
 
@@ -96,7 +96,7 @@ class WorkflowStateUpdate(object):
         return self._variables
 
     @variables.setter
-    def variables(self, variables: dict[str, object]):
+    def variables(self, variables: Dict[str, object]):
         """Sets the variables of this WorkflowStateUpdate.
 
 
