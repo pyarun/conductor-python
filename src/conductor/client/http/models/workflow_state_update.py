@@ -1,6 +1,6 @@
 import pprint
 import re  # noqa: F401
-from typings import Dict
+from typing import Dict
 import six
 
 from conductor.client.http.models import TaskResult

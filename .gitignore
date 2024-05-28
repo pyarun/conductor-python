@@ -165,3 +165,4 @@ latest.txt
 .vscode/
 tests/unit/automator/_trial_temp/_trial_marker
 tests/unit/automator/_trial_temp/_trial_marker
+.history
