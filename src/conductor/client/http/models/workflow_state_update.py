@@ -36,7 +36,7 @@ class WorkflowStateUpdate:
     task_reference_name: Optional[str] = field(default=None)
     task_result: Optional[TaskResult] = field(default=None)
     variables: Optional[Dict[str, object]] = field(default=None)
-    
+
     _task_reference_name: Optional[str] = field(default=None, init=False, repr=False)
     _task_result: Optional[TaskResult] = field(default=None, init=False, repr=False)
     _variables: Optional[Dict[str, object]] = field(default=None, init=False, repr=False)

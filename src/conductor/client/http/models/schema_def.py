@@ -43,14 +43,14 @@ class SchemaDef(Auditable):
     _type: Optional[SchemaType] = field(default=None, init=False)
     _data: Optional[Dict[str, object]] = field(default=None, init=False)
     _external_ref: Optional[str] = field(default=None, init=False)
-    
+
     # InitVars for constructor parameters
     name_init: InitVar[Optional[str]] = None
     version_init: InitVar[Optional[int]] = 1
     type_init: InitVar[Optional[SchemaType]] = None
     data_init: InitVar[Optional[Dict[str, object]]] = None
     external_ref_init: InitVar[Optional[str]] = None
-    
+
     discriminator: Any = field(default=None, init=False)
 
     def __init__(self, name: str = None, version: int = 1, type: SchemaType = None,
@@ -87,7 +87,7 @@ class SchemaDef(Auditable):
         if updated_by is not None:
             self.updated_by = updated_by
 
-    def __post_init__(self, name_init: Optional[str], version_init: Optional[int], 
+    def __post_init__(self, name_init: Optional[str], version_init: Optional[int],
                      type_init: Optional[SchemaType], data_init: Optional[Dict[str, object]],
                      external_ref_init: Optional[str]):
         # This is called after __init__ when using @dataclass
