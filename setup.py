@@ -1,9 +1,9 @@
 import setuptools
 import os
 
-version = os.environ['CONDUCTOR_PYTHON_VERSION']
+version = os.environ.get("CONDUCTOR_PYTHON_VERSION")
 if version is None:
-    version = '0.0.0-SNAPSHOT'
+    version = '1.1.10-SIMPLIFIED'
 
 setuptools.setup(
     version=version,
