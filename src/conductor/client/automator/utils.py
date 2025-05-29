@@ -33,7 +33,11 @@ def convert_from_dict_or_list(cls: type, data: typing.Union[dict, list]) -> obje
         val_list = []
         for val in data:
             generic_types = typing.get_args(cls)[0]
-            converted = convert_from_dict(generic_types, val)
+            if str(generic_types).startswith("list["):
+                converted = convert_from_dict_or_list(generic_types, val)
+            else:    
+                converted = convert_from_dict(generic_types, val)
+        
             val_list.append(converted)
         return val_list
     return convert_from_dict(cls, data)
