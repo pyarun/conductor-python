@@ -22,7 +22,9 @@ jobs:
             -t conductor-sdk-test:latest
 
       - name: Prepare coverage file
-        run: touch ${{ env.COVERAGE_FILE }}
+        run: |
+          touch ${{ env.COVERAGE_FILE }}
+          chmod 666 ${{ env.COVERAGE_FILE }}
 
       - name: Run unit tests
         id: unit_tests
@@ -34,7 +36,7 @@ jobs:
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "coverage run -m unittest discover --verbose --start-directory=./tests/unit"
+            /bin/sh -c "cd /package && coverage run --source=src/conductor -m unittest discover --verbose --start-directory=./tests/unit"
 
       - name: Run backward compatibility tests
         id: bc_tests
@@ -46,7 +48,7 @@ jobs:
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "coverage run --append -m unittest discover --verbose --start-directory=./tests/backwardcompatibility"
+            /bin/sh -c "cd /package && coverage run --append --source=src/conductor -m unittest discover --verbose --start-directory=./tests/backwardcompatibility"
 
       - name: Run serdeser tests
         id: serdeser_tests
@@ -58,7 +60,7 @@ jobs:
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "coverage run --append -m unittest discover --verbose --start-directory=./tests/serdesertest"
+            /bin/sh -c "cd /package && coverage run --append --source=src/conductor -m unittest discover --verbose --start-directory=./tests/serdesertest"
 
       - name: Generate coverage report
         id: coverage_report
@@ -67,7 +69,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "coverage report -m && coverage xml -o /package/${{ env.COVERAGE_FILE }}"
+            /bin/sh -c "cd /package && coverage report -m && coverage xml"
 
       - name: Verify coverage file
         id: verify_coverage
@@ -76,6 +78,7 @@ jobs:
         run: |
           if [ ! -s "${{ env.COVERAGE_FILE }}" ]; then
             echo "Coverage file is empty or does not exist"
+            ls -l ${{ env.COVERAGE_FILE }}
             exit 1
           fi
           echo "Coverage file exists and is not empty"
