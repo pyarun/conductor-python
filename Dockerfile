@@ -10,10 +10,8 @@ WORKDIR /package
 RUN pwd
 RUN ls -ltr
 ENV PYTHONPATH /package/src:/package/tests
-RUN python3 -m pip install pylint
-#RUN python3 -m pylint --disable=all ./src
-RUN python3 -m pip install coverage && \
-    python3 -m pip install -r ./requirements.txt
+RUN python3 -m pip install -r ./requirements.txt && \
+    python3 -m pip install -r ./requirements.dev.txt
 
 FROM python_test_base as unit_test
 ARG CONDUCTOR_AUTH_KEY
