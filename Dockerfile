@@ -29,6 +29,23 @@ RUN python3 -m unittest discover --verbose --start-directory=./tests/serdesertes
 RUN coverage run --source=./src/conductor/client/orkes -m unittest discover --verbose --start-directory=./tests/integration
 RUN coverage report -m
 
+FROM python_test_base as coverage_test
+ARG CONDUCTOR_AUTH_KEY
+ARG CONDUCTOR_AUTH_SECRET
+ARG CONDUCTOR_SERVER_URL
+ENV CONDUCTOR_AUTH_KEY=${CONDUCTOR_AUTH_KEY}
+ENV CONDUCTOR_AUTH_SECRET=${CONDUCTOR_AUTH_SECRET}
+ENV CONDUCTOR_SERVER_URL=${CONDUCTOR_SERVER_URL}
+RUN ls -ltr
+# Run unit, backward compatibility, and serialization tests with coverage
+RUN coverage run -m unittest discover --verbose --start-directory=./tests/unit
+RUN coverage run --append -m unittest discover --verbose --start-directory=./tests/backwardcompatibility
+RUN coverage run --append -m unittest discover --verbose --start-directory=./tests/serdesertest
+# Run integration tests with coverage
+RUN coverage run --append --source=./src/conductor/client/orkes -m unittest discover --verbose --start-directory=./tests/integration
+RUN coverage report -m
+RUN coverage xml -o /package/coverage.xml
+
 FROM python_test_base as test
 ARG CONDUCTOR_AUTH_KEY
 ARG CONDUCTOR_AUTH_SECRET

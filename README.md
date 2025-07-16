@@ -1,4 +1,5 @@
 # Conductor OSS Python SDK
+[![codecov](https://codecov.io/gh/conductor-oss/python-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/conductor-oss/python-sdk)
 
 Python SDK for working with https://github.com/conductor-oss/conductor.
 

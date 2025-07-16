@@ -8,11 +8,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Test
+
+      - name: Build and test with coverage
         run: >
           DOCKER_BUILDKIT=1 docker build .
           --progress=plain
           --build-arg CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }}
           --build-arg CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }}
           --build-arg CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }}
-          --target=unit_test
+          --target=coverage_test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: coverage.xml
+          fail_ci_if_error: true
