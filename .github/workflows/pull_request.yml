@@ -2,24 +2,36 @@ name: Continuous Integration
 
 on: [pull_request, workflow_dispatch]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-test:
     runs-on: ubuntu-latest
+    env:
+      COVERAGE_FILE: coverage.xml
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build and test with coverage
-        run: >
-          DOCKER_BUILDKIT=1 docker build .
-          --progress=plain
-          --build-arg CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }}
-          --build-arg CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }}
-          --build-arg CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }}
-          --target=coverage_test
+      - name: Build test image
+        run: |
+          DOCKER_BUILDKIT=1 docker build . \
+            --target coverage_test \
+            -t conductor-sdk-test:latest
+
+      - name: Run tests with coverage
+        run: |
+          docker run --rm \
+            -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
+            -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
+            -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }} \
+            conductor-sdk-test:latest
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          file: coverage.xml
+          file: ${{ env.COVERAGE_FILE }}
           fail_ci_if_error: true
