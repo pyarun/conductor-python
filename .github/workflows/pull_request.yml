@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COVERAGE_FILE: coverage.xml
-      COVERAGE_DB: .coverage
+      COVERAGE_DIR: .coverage-reports
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,12 +22,12 @@ jobs:
             --target python_test_base \
             -t conductor-sdk-test:latest
 
-      - name: Prepare coverage files
+      - name: Prepare coverage directory
         run: |
+          mkdir -p ${{ env.COVERAGE_DIR }}
+          chmod 777 ${{ env.COVERAGE_DIR }}
           touch ${{ env.COVERAGE_FILE }}
-          touch ${{ env.COVERAGE_DB }}
           chmod 666 ${{ env.COVERAGE_FILE }}
-          chmod 666 ${{ env.COVERAGE_DB }}
 
       - name: Run unit tests
         id: unit_tests
@@ -37,10 +37,9 @@ jobs:
             -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
             -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_DB }}:/package/${{ env.COVERAGE_DB }}:rw \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "cd /package && coverage run --source=src/conductor -m unittest discover --verbose --start-directory=./tests/unit"
+            /bin/sh -c "cd /package && coverage run --parallel-mode --source=src/conductor -m unittest discover --verbose --start-directory=./tests/unit"
 
       - name: Run backward compatibility tests
         id: bc_tests
@@ -50,10 +49,9 @@ jobs:
             -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
             -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_DB }}:/package/${{ env.COVERAGE_DB }}:rw \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "cd /package && coverage run --append --source=src/conductor -m unittest discover --verbose --start-directory=./tests/backwardcompatibility"
+            /bin/sh -c "cd /package && coverage run --parallel-mode --source=src/conductor -m unittest discover --verbose --start-directory=./tests/backwardcompatibility"
 
       - name: Run serdeser tests
         id: serdeser_tests
@@ -63,20 +61,19 @@ jobs:
             -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
             -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_DB }}:/package/${{ env.COVERAGE_DB }}:rw \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "cd /package && coverage run --append --source=src/conductor -m unittest discover --verbose --start-directory=./tests/serdesertest"
+            /bin/sh -c "cd /package && coverage run --parallel-mode --source=src/conductor -m unittest discover --verbose --start-directory=./tests/serdesertest"
 
       - name: Generate coverage report
         id: coverage_report
         continue-on-error: true
         run: |
           docker run --rm \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_DB }}:/package/${{ env.COVERAGE_DB }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "cd /package && coverage report && coverage xml"
+            /bin/sh -c "cd /package && coverage combine ${{ env.COVERAGE_DIR }}/.coverage* && coverage report && coverage xml"
 
       - name: Verify coverage file
         id: verify_coverage
@@ -85,7 +82,7 @@ jobs:
         run: |
           if [ ! -s "${{ env.COVERAGE_FILE }}" ]; then
             echo "Coverage file is empty or does not exist"
-            ls -la ${{ env.COVERAGE_FILE }} ${{ env.COVERAGE_DB }}
+            ls -la ${{ env.COVERAGE_FILE }} ${{ env.COVERAGE_DIR }}
             exit 1
           fi
           echo "Coverage file exists and is not empty"
