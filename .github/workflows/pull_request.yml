@@ -2,17 +2,99 @@ name: Continuous Integration
 
 on: [pull_request, workflow_dispatch]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-test:
     runs-on: ubuntu-latest
+    env:
+      COVERAGE_FILE: coverage.xml
+      COVERAGE_DIR: .coverage-reports
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Test
-        run: >
-          DOCKER_BUILDKIT=1 docker build .
-          --progress=plain
-          --build-arg CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }}
-          --build-arg CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }}
-          --build-arg CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }}
-          --target=unit_test
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: |
+          DOCKER_BUILDKIT=1 docker build . \
+            --target python_test_base \
+            -t conductor-sdk-test:latest
+
+      - name: Prepare coverage directory
+        run: |
+          mkdir -p ${{ env.COVERAGE_DIR }}
+          chmod 777 ${{ env.COVERAGE_DIR }}
+          touch ${{ env.COVERAGE_FILE }}
+          chmod 666 ${{ env.COVERAGE_FILE }}
+
+      - name: Run unit tests
+        id: unit_tests
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
+            -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
+            -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
+            conductor-sdk-test:latest \
+            /bin/sh -c "cd /package && COVERAGE_FILE=/package/${{ env.COVERAGE_DIR }}/.coverage.unit coverage run --source=src/conductor -m unittest discover --verbose --start-directory=./tests/unit"
+
+      - name: Run backward compatibility tests
+        id: bc_tests
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
+            -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
+            -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
+            conductor-sdk-test:latest \
+            /bin/sh -c "cd /package && COVERAGE_FILE=/package/${{ env.COVERAGE_DIR }}/.coverage.bc coverage run --source=src/conductor -m unittest discover --verbose --start-directory=./tests/backwardcompatibility"
+
+      - name: Run serdeser tests
+        id: serdeser_tests
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
+            -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
+            -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
+            conductor-sdk-test:latest \
+            /bin/sh -c "cd /package && COVERAGE_FILE=/package/${{ env.COVERAGE_DIR }}/.coverage.serdeser coverage run --source=src/conductor -m unittest discover --verbose --start-directory=./tests/serdesertest"
+
+      - name: Generate coverage report
+        id: coverage_report
+        continue-on-error: true
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_DIR }}:/package/${{ env.COVERAGE_DIR }}:rw \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
+            conductor-sdk-test:latest \
+            /bin/sh -c "cd /package && coverage combine /package/${{ env.COVERAGE_DIR }}/.coverage.* && coverage report && coverage xml"
+
+      - name: Verify coverage file
+        id: verify_coverage
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ ! -s "${{ env.COVERAGE_FILE }}" ]; then
+            echo "Coverage file is empty or does not exist"
+            ls -la ${{ env.COVERAGE_FILE }} ${{ env.COVERAGE_DIR }}
+            exit 1
+          fi
+          echo "Coverage file exists and is not empty"
+
+      - name: Upload coverage to Codecov
+        if: always() && steps.verify_coverage.outcome == 'success'
+        continue-on-error: true
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ${{ env.COVERAGE_FILE }}
+
+      - name: Check test results
+        if: steps.unit_tests.outcome == 'failure' || steps.bc_tests.outcome == 'failure' || steps.serdeser_tests.outcome == 'failure'
+        run: exit 1
