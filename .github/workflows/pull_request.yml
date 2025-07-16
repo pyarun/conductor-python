@@ -18,7 +18,7 @@ jobs:
       - name: Build test image
         run: |
           DOCKER_BUILDKIT=1 docker build . \
-            --target coverage_test \
+            --target python_test_base \
             -t conductor-sdk-test:latest
 
       - name: Run tests with coverage
@@ -28,10 +28,17 @@ jobs:
             -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }} \
-            conductor-sdk-test:latest
+            conductor-sdk-test:latest \
+            /bin/sh -c "coverage run -m unittest discover --verbose --start-directory=./tests/unit && \
+                       coverage run --append -m unittest discover --verbose --start-directory=./tests/backwardcompatibility && \
+                       coverage run --append -m unittest discover --verbose --start-directory=./tests/serdesertest && \
+                       coverage run --append --source=./src/conductor/client/orkes -m unittest discover --verbose --start-directory=./tests/integration && \
+                       coverage report -m && \
+                       coverage xml -o /package/coverage.xml"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ${{ env.COVERAGE_FILE }}
           fail_ci_if_error: true
