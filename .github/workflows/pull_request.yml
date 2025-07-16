@@ -76,7 +76,7 @@ jobs:
             -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             -v ${{ github.workspace }}/${{ env.COVERAGE_DB }}:/package/${{ env.COVERAGE_DB }}:rw \
             conductor-sdk-test:latest \
-            /bin/sh -c "cd /package && coverage report && coverage xml && cat coverage.xml"
+            /bin/sh -c "cd /package && coverage report && coverage xml"
 
       - name: Verify coverage file
         id: verify_coverage
@@ -89,7 +89,6 @@ jobs:
             exit 1
           fi
           echo "Coverage file exists and is not empty"
-          cat ${{ env.COVERAGE_FILE }}
 
       - name: Upload coverage to Codecov
         if: always() && steps.verify_coverage.outcome == 'success'
