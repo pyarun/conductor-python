@@ -13,13 +13,16 @@ jobs:
       COVERAGE_FILE: coverage.xml
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Build test image
         run: |
           DOCKER_BUILDKIT=1 docker build . \
             --target python_test_base \
             -t conductor-sdk-test:latest
+
+      - name: Prepare coverage file
+        run: touch ${{ env.COVERAGE_FILE }}
 
       - name: Run tests with coverage
         id: run_tests
@@ -29,17 +32,28 @@ jobs:
             -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
             -e CONDUCTOR_AUTH_SECRET=${{ secrets.CONDUCTOR_AUTH_SECRET }} \
             -e CONDUCTOR_SERVER_URL=${{ secrets.CONDUCTOR_SERVER_URL }} \
-            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }} \
+            -v ${{ github.workspace }}/${{ env.COVERAGE_FILE }}:/package/${{ env.COVERAGE_FILE }}:rw \
             conductor-sdk-test:latest \
             /bin/sh -c "coverage run -m unittest discover --verbose --start-directory=./tests/unit && \
                        coverage run --append -m unittest discover --verbose --start-directory=./tests/backwardcompatibility && \
                        coverage run --append -m unittest discover --verbose --start-directory=./tests/serdesertest && \
                        coverage run --append --source=./src/conductor/client/orkes -m unittest discover --verbose --start-directory=./tests/integration && \
                        coverage report -m && \
-                       coverage xml -o /package/coverage.xml"
+                       coverage xml -o /package/${{ env.COVERAGE_FILE }}"
+
+      - name: Verify coverage file
+        id: verify_coverage
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ ! -s "${{ env.COVERAGE_FILE }}" ]; then
+            echo "Coverage file is empty or does not exist"
+            exit 1
+          fi
+          echo "Coverage file exists and is not empty"
 
       - name: Upload coverage to Codecov
-        if: always()
+        if: always() && steps.verify_coverage.outcome == 'success'
         continue-on-error: true
         uses: codecov/codecov-action@v3
         with:
