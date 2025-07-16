@@ -22,6 +22,8 @@ jobs:
             -t conductor-sdk-test:latest
 
       - name: Run tests with coverage
+        id: run_tests
+        continue-on-error: true
         run: |
           docker run --rm \
             -e CONDUCTOR_AUTH_KEY=${{ secrets.CONDUCTOR_AUTH_KEY }} \
@@ -37,8 +39,13 @@ jobs:
                        coverage xml -o /package/coverage.xml"
 
       - name: Upload coverage to Codecov
+        if: always()
+        continue-on-error: true
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ${{ env.COVERAGE_FILE }}
-          fail_ci_if_error: true
+
+      - name: Check test results
+        if: steps.run_tests.outcome == 'failure'
+        run: exit 1
