@@ -155,6 +155,8 @@ class TaskInterface(ABC):
     def output(self, json_path: Optional[str] = None) -> str:
         if json_path is None:
             return '${' + f'{self.task_reference_name}.output' + '}'
+        elif json_path.startswith('.'):
+            return '${' + f'{self.task_reference_name}.output{json_path}' + '}'
         else:
             return '${' + f'{self.task_reference_name}.output.{json_path}' + '}'
 
@@ -174,7 +176,7 @@ class TaskInterface(ABC):
             else:
                 return '${' + f'{self.task_reference_name}.input.{json_path}' + '}'
 
-    def __getattribute__(self, __name: str) -> Any:
+    def __getattribute__(self, __name: str, /) -> Any:
         try:
             val = super().__getattribute__(__name)
             return val

@@ -109,10 +109,7 @@ def get_value(typ: type, val: object) -> object:
     if typ in simple_types:
         return val
     elif str(typ).startswith('typing.List[') or str(typ).startswith('typing.Set[') or str(typ).startswith('list['):
-        values = []
-        for item in val:
-            converted = get_value(type(item), item)
-            values.append(converted)
+        values = [get_value(type(item), item) for item in val]
         return values
     elif str(typ).startswith('dict[') or str(typ).startswith(
             'typing.Dict[') or str(typ).startswith('requests.structures.CaseInsensitiveDict[') or typ is dict:
