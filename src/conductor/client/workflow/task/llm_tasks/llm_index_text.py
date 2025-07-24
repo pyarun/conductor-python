@@ -23,7 +23,8 @@ class LlmIndexText(TaskInterface):
 
     def __init__(self, task_ref_name: str, vector_db: str, index: str,
                  embedding_model: EmbeddingModel, text: str, doc_id: str, namespace: Optional[str] = None, task_name: Optional[str] = None,
-                 metadata: dict = {}) -> Self:
+                 metadata: Optional[dict] = None) -> Self:
+        metadata = metadata or {}
         if task_name is None:
             task_name = 'llm_index_doc'
 

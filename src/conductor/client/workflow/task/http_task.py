@@ -1,7 +1,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional, Union
 
 from typing_extensions import Self
 
@@ -19,7 +19,7 @@ class HttpMethod(str, Enum):
 
 
 class HttpInput:
-    swagger_types = {
+    swagger_types: ClassVar[Dict[str, str]] = {
         '_uri': 'str',
         '_method': 'str',
         '_accept': 'list[str]',
@@ -30,7 +30,7 @@ class HttpInput:
         '_body': 'str',
     }
 
-    attribute_map = {
+    attribute_map: ClassVar[Dict[str, str]] = {
         '_uri': 'uri',
         '_method': 'method',
         '_accept': 'accept',
