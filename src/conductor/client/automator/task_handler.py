@@ -2,7 +2,7 @@ from __future__ import annotations
 import importlib
 import logging
 import os
-from multiprocessing import Process, freeze_support, Queue, set_start_method, get_context
+from multiprocessing import Process, freeze_support, Queue, set_start_method
 from sys import platform
 from typing import List, Optional
 
