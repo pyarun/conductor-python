@@ -26,7 +26,7 @@ class LlmIndexText(TaskInterface):
                  metadata: Optional[dict] = None) -> Self:
         metadata = metadata or {}
         if task_name is None:
-            task_name = 'llm_index_doc'
+            task_name = "llm_index_doc"
 
         super().__init__(
             task_name=task_name,
@@ -43,4 +43,4 @@ class LlmIndexText(TaskInterface):
             }
         )
         if namespace is not None:
-            self.input_parameter('namespace', namespace)
+            self.input_parameter("namespace", namespace)

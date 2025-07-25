@@ -72,7 +72,6 @@ class OrkesIntegrationClient(OrkesBaseClient, IntegrationClient):
     def delete_tag_for_integration(self, body, tag_name, integration_name):
         """Delete an integration"""
 
-
     def delete_tag_for_integration_provider(self, body, name):
         ...
 

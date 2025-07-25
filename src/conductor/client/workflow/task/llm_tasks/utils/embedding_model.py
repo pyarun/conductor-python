@@ -2,13 +2,13 @@ from typing import ClassVar, Dict
 
 class EmbeddingModel(object):
     swagger_types: ClassVar[Dict[str, str]] = {
-        'provider': 'str',
-        'model': 'str'
+        "provider": "str",
+        "model": "str"
     }
 
     attribute_map: ClassVar[Dict[str, str]] = {
-        'provider': 'embeddingModelProvider',
-        'model': 'embeddingModel'
+        "provider": "embeddingModelProvider",
+        "model": "embeddingModel"
     }
 
     def __init__(self, provider: str, model: str):

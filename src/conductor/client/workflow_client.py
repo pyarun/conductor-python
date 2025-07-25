@@ -86,7 +86,7 @@ class WorkflowClient(ABC):
         pass
 
     @abstractmethod
-    def search(self, start: int = 0, size: int = 100, free_text: str = '*',
+    def search(self, start: int = 0, size: int = 100, free_text: str = "*",
                query: Optional[str] = None) -> ScrollableSearchResultWorkflowSummary:
         pass
 
