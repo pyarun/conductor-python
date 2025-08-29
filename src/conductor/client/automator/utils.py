@@ -35,6 +35,8 @@ def convert_from_dict_or_list(cls: type, data: typing.Union[dict, list]) -> obje
             generic_types = typing.get_args(cls)[0]
             if str(generic_types).startswith("list["):
                 converted = convert_from_dict_or_list(generic_types, val)
+            elif str(generic_types).startswith("<class 'int'"):
+                converted = int(val)
             else:    
                 converted = convert_from_dict(generic_types, val)
         
