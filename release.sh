@@ -139,7 +139,7 @@ git commit -m "Bump version to $NEW_VERSION"
 
 # Create git tag with the new format
 print_status "Creating git tag $TAG_NAME..."
-git tag -a "$TAG_NAME" -m "Release version $NEW_VERSION"
+git tag -a "$TAG_NAME" -m "Simplified Release version $NEW_VERSION"
 
 # Upload to GitLab Package Registry
 print_status "Uploading to GitLab Package Registry..."
@@ -151,7 +151,7 @@ python -m twine upload \
 
 # Push changes and tags to remote
 print_status "Pushing changes to remote repository..."
-git push origin main
+# git push origin main
 git push origin "$TAG_NAME"
 
 print_status "Release $NEW_VERSION completed successfully!"
