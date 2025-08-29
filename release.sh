@@ -45,9 +45,9 @@ if [ ! -d ".git" ]; then
     exit 1
 fi
 
-# Check if setup.py exists
-if [ ! -f "setup.py" ]; then
-    print_error "setup.py not found"
+# Check if pyproject.toml exists
+if [ ! -f "pyproject.toml" ]; then
+    print_error "pyproject.toml not found"
     exit 1
 fi
 
@@ -75,12 +75,8 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
-# Get current version from setup.py
-CURRENT_VERSION=$(grep -E "^\s*version\s*=" setup.py | head -1 | sed -E "s/^[^0-9]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/")
-if [ -z "$CURRENT_VERSION" ]; then
-    print_error "Could not determine current version from setup.py"
-    exit 1
-fi
+# Get current version from pyproject.toml
+CURRENT_VERSION=$(grep -E '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
 print_status "Current version: $CURRENT_VERSION"
 
 # Calculate new version
@@ -106,14 +102,13 @@ esac
 
 NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
 TAG_NAME="Simplified-${NEW_VERSION}"
-
 print_status "New version: $NEW_VERSION"
 print_status "Tag name: $TAG_NAME"
 
-# Update version in setup.py
-print_status "Updating version in setup.py..."
-sed -i.bak "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" setup.py
-rm -f setup.py.bak
+# Update version in pyproject.toml
+print_status "Updating version in pyproject.toml..."
+sed -i.bak "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" pyproject.toml
+rm pyproject.toml.bak
 
 # Clean previous builds
 print_status "Cleaning previous builds..."
@@ -134,15 +129,15 @@ print_status "Build completed successfully"
 
 # Commit version change
 print_status "Committing version change..."
-git add setup.py
+git add pyproject.toml
 git commit -m "Bump version to $NEW_VERSION"
 
-# Create git tag with the new format
+# Create git tag
 print_status "Creating git tag $TAG_NAME..."
 git tag -a "$TAG_NAME" -m "Simplified Release version $NEW_VERSION"
 
-# Upload to GitLab Package Registry
-print_status "Uploading to GitLab Package Registry..."
+# Upload to PyPI
+print_status "Uploading to PyPI..."
 python -m twine upload \
   --repository-url "https://gitlab.com/api/v4/projects/70495826/packages/pypi" \
   dist/* \
