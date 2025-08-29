@@ -6,9 +6,11 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-version = os.environ.get("CONDUCTOR_PYTHON_VERSION")
-if version is None:
-    version = '1.1.10-SIMPLIFIED'
+# version = os.environ.get("CONDUCTOR_PYTHON_VERSION")
+# if version is None:
+#     version = '1.1.10-SIMPLIFIED'
+
+version="1.1.10"
 
 setuptools.setup(
     name="conductor-python",
