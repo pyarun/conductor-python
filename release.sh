@@ -68,7 +68,7 @@ fi
 
 print_status "Starting automated release process..."
 
-# # Check for uncommitted changes
+# Check for uncommitted changes
 if [ -n "$(git status --porcelain)" ]; then
     print_error "There are uncommitted changes. Please commit or stash them first."
     git status --short
@@ -112,7 +112,7 @@ print_status "Tag name: $TAG_NAME"
 
 # Update version in setup.py
 print_status "Updating version in setup.py..."
-sed -i.bak -E "s/^(\s*version\s*=\s*['\"]).*(['\"])/\1$NEW_VERSION\2/" setup.py
+sed -i.bak "s/version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" setup.py
 rm -f setup.py.bak
 
 # Clean previous builds
