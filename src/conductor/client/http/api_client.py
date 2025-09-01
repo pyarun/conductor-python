@@ -273,8 +273,8 @@ class ApiClient(object):
                 return [self.__deserialize(sub_data, sub_kls)
                         for sub_data in data]
 
-            if klass.startswith('set['):
-                sub_kls = re.match(r'set\[(.*)\]', klass).group(1)
+            if klass.lower().startswith('set['):
+                sub_kls = re.match(r'[S|s]et\[(.*)\]', klass).group(1)
                 return set(self.__deserialize(sub_data, sub_kls)
                            for sub_data in data)
 
